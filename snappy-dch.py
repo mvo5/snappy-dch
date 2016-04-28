@@ -4,12 +4,16 @@
 import subprocess
 import sys
 import textwrap
+import re
+
 
 class Commit():
     def __init__(self, raw):
         self._raw = raw
     def author(self):
         return self._find_tag("Author")
+    def merge(self):
+        return self._find_tag("Merge")
     def body(self):
         body = ""
         for line in self._raw.split("\n"):
@@ -28,12 +32,25 @@ class Commit():
     
 def commits(lines):
     commit = ""
-    for line in output.split("\n"):
+    for line in lines.split("\n"):
         if line.startswith("commit ") and commit:
             stanza = commit
             commit = ""
             yield Commit(stanza)
         commit += line + "\n"
+    yield Commit(commit)
+
+        
+def find_closed_bugs(commit):
+    start, end = commit.merge().split()
+    output = subprocess.check_output(
+        ["git", "log", "{}..{}".format(start, end)])
+    bugs = []
+    for change in commits(output):
+        for line in change.body().split("\n"):
+            if re.search(r'LP[:]*#', line):
+                bugs.append(line)
+    return "\n".join(bugs)
 
         
 def filter(body):
@@ -42,7 +59,6 @@ def filter(body):
     for line in body.split("\n"):
         line = line.strip()
         if "Closes:" in line:
-            print(line, line.split("Closes:")[1])
             closes.append(line.split("Closes:")[1])
             continue
         if not line:
@@ -55,7 +71,7 @@ def filter(body):
             continue
         if not ":" in line:
             continue
-        out += line + ",".join(closes) + "\n"
+        out += line + ",".join(closes)
     return out
 
 
@@ -68,9 +84,13 @@ if __name__ == "__main__":
     for commit in commits(output):
         change =  filter(commit.body())
         if change:
-            changes += change 
+            closed_bugs = find_closed_bugs(commit)
+            if closed_bugs:
+                change += " (" + closed_bugs + ")"
+            changes += change + "\n"
 
     wrapper = textwrap.TextWrapper(initial_indent="    - ", subsequent_indent="      ", width=72)
     for line in changes.split("\n"):
         #print("    - {}".format(line))
         print("\n".join(wrapper.wrap(line)))
+        pass
