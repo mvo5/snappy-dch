@@ -69,6 +69,8 @@ def filter(body):
             continue
         if line.startswith("Merge remote"):
             continue
+        if line.startswith("Signed-off-by:"):
+            continue
         if not ":" in line:
             continue
         out += line + ",".join(closes)
