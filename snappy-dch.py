@@ -6,6 +6,7 @@ import sys
 import textwrap
 import re
 
+seen = set()
 
 class Commit():
     def __init__(self, raw):
@@ -28,7 +29,9 @@ class Commit():
         return ""
     def __str__(self):
         return self._raw
-
+    def commit(self):
+        return self._raw.split("\n")[0]
+    
     
 def commits(lines):
     commit = ""
@@ -42,11 +45,14 @@ def commits(lines):
 
         
 def find_closed_bugs(commit):
+    if commit.merge() == "":
+        return ""
     start, end = commit.merge().split()
     output = subprocess.check_output(
         ["git", "log", "{}..{}".format(start, end)])
     bugs = []
     for change in commits(output):
+        seen.add(change.commit())
         for line in change.body().split("\n"):
             if re.search(r'LP[:]*#', line):
                 bugs.append(line)
@@ -80,10 +86,12 @@ def filter(body):
 if __name__ == "__main__":
     since = sys.argv[1]
     output = subprocess.check_output(
-        ["git", "log", "--merges", "{}..".format(since)])
+        ["git", "log", "{}..".format(since)])
 
     changes = ""
     for commit in commits(output):
+        if commit.commit() in seen:
+            continue
         change =  filter(commit.body())
         if change:
             closed_bugs = find_closed_bugs(commit)
