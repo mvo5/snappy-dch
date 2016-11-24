@@ -62,6 +62,7 @@ def find_closed_bugs(commit):
 def filter(body):
     out = ""
     closes = []
+    seen = set()
     for line in body.split("\n"):
         line = line.strip()
         if "Closes:" in line:
@@ -79,6 +80,10 @@ def filter(body):
             continue
         if not ":" in line:
             continue
+        # skip duplicates
+        if line in seen:
+            continue
+        seen.add(line)
         out += line + ",".join(closes)
     return out
 
