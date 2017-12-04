@@ -20,11 +20,15 @@ def scan(fname):
         for line in fp:
             line = line.strip().replace("\x1b[0K","")
             if line.startswith("travis_time:start:"):
-                ti = TravisInfo(line.split(":")[2])
+                id = line.split(":")[2]
+                ti = TravisInfo(id)
                 info_map[ti.id] = ti
             elif line.startswith("travis_time:end:"):
                 id = line.split(":")[2]
                 info_map[id].duration = datetime.timedelta(microseconds=int(line.split("duration=")[1])/1000.0)
+                if "running late. " in info_map[id].info:
+                    del(info_map[id])
+                id = ""
             elif id:
                 ti = info_map[id]
                 match = re.search(r"linode:([a-z0-9.-]+)...", line)
