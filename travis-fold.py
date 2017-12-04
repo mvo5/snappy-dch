@@ -6,10 +6,11 @@ import sys
 
 
 class TravisInfo:
-    id = ""
-    info = ""
-    duration = datetime.timedelta(0)
-    machine = "unknown"
+    def __init__(self, id):
+        self.id = id
+        self.info = ""
+        self.duration = datetime.timedelta(0)
+        self.machine = "unknown"
 
     
 def scan(fname):
@@ -19,8 +20,7 @@ def scan(fname):
         for line in fp:
             line = line.strip().replace("\x1b[0K","")
             if line.startswith("travis_time:start:"):
-                ti = TravisInfo()
-                id = ti.id = line.split(":")[2]
+                ti = TravisInfo(line.split(":")[2])
                 info_map[ti.id] = ti
             elif line.startswith("travis_time:end:"):
                 id = line.split(":")[2]
