@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import datetime
-import fileinput
 import re
 import sys
 
@@ -15,7 +14,7 @@ class TravisInfo:
     
 def scan(fname):
     info_map = {}
-    with fileinput.input() as fp:
+    with open(fname) as fp:
         id = ""
         for line in fp:
             line = line.strip().replace("\x1b[0K","")
