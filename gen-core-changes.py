@@ -131,7 +131,8 @@ def snap_changes(old_snap, new_snap):
 
 def all_snap_changes(archive_dir):
     all_changes = []
-    snaps=sorted(glob.glob(archive_dir+"/*.snap"))
+    snaps=sorted(
+        glob.glob(archive_dir+"/*.snap"), key=lambda p: int(re.match(r'.*_([0-9]+).snap', p).group(1)))
     for i in range(len(snaps)-1):
         a = snaps[i]
         b = snaps[i+1]
