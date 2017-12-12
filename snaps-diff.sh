@@ -9,8 +9,11 @@ b=$(unsquashfs -ls "$2"|sort|uniq)
 diff -u <(echo "$a") <(echo "$b") || true
 
 echo "Content diff"
-tmp1=$(mktemp -d)
-tmp2=$(mktemp -d)
+tmp=$(mktemp -d)
+tmp1=${tmp}/1
+tmp2=${tmp}/2
+
+trap "rm -rf $tmp" EXIT 
 
 fakeroot unsquashfs -f -d "$tmp1" "$1"
 fakeroot unsquashfs -f -d "$tmp2" "$2"
