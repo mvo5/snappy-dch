@@ -2,6 +2,7 @@
 #
 # no python3 on lillypilly
 
+import datetime
 import glob
 import gzip
 import os
@@ -11,7 +12,6 @@ import subprocess
 import sys
 import tempfile
 
-import pprint
 
 class tmpdir:
     def __enter__(self):
@@ -22,9 +22,10 @@ class tmpdir:
 
 
 class Change:
-    def __init__(self, old_version, new_version, diff, changelogs):
+    def __init__(self, old_version, new_version, date_new, diff, changelogs):
         self.old_version = old_version
         self.new_version = new_version
+        self.build_date = date_new
         self.pkg_changes = diff
         self.changelogs = changelogs
     def __repr__(self):
@@ -110,35 +111,44 @@ def deb_changelogs(new_snap, pkg_changes):
                 changelogs[name] = changelog_until(changelog_path, old_ver)
                 break
     return changelogs
-        
-        
+
+
+def build_date(snap):
+    with tmpdir() as tmp:
+        unsquashfs(tmp, snap, "/usr/lib/snapd/info")
+        mtime = os.path.getmtime(os.path.join(tmp, "usr/lib/snapd/info"))
+        return datetime.datetime.fromtimestamp(mtime)
+
+
 def snap_changes(old_snap, new_snap):
     old_ver = core_version(old_snap)
     new_ver= core_version(new_snap)
     diff = debs_delta(core_debs(old_snap), core_debs(new_snap))
     changelogs = deb_changelogs(new_snap, diff)
-    return Change(old_ver, new_ver, diff, changelogs)
+    bd = build_date(new_snap)
+    return Change(old_ver, new_ver, bd, diff, changelogs)
 
 
 def all_snap_changes(archive_dir):
     all_changes = []
-    snaps=sorted(glob.glob(archive_dir+"/*.snap"), reverse=True)
+    snaps=sorted(glob.glob(archive_dir+"/*.snap"))
     for i in range(len(snaps)-1):
         a = snaps[i]
         b = snaps[i+1]
         all_changes.append(snap_changes(a,b))
+    all_changes.reverse()
     return all_changes
 
 
 def render_text(changes):
     for chg in changes:
-        print("# Core snap %s to %s" % (chg.old_version, chg.new_version))
+        print("# Core snap %s to %s (build %s)" % (chg.old_version, chg.new_version, chg.build_date))
         print("\n")
         print("## Package changes\n")
-        for deb, ver in sorted(chg.pkg_changes.items()):
-            print(" * %s: %s -> %s" % (deb, ver[0], ver[1]))
+        for deb, (old_ver, new_ver) in sorted(chg.pkg_changes.items()):
+            print(" * %s: %s -> %s" % (deb, old_ver, new_ver))
         print("\n")
-        print("## Changelogs\nq")
+        print("## Changelogs\n")
         for name, changelog in chg.changelogs.items():
             print("%s" % changelog)
             print("\n")
