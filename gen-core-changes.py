@@ -121,27 +121,28 @@ def snap_changes(old_snap, new_snap):
 
 
 def all_snap_changes(archive_dir):
-    all_changes = {}
-    snaps=sorted(glob.glob(archive_dir+"/*.snap"))
+    all_changes = []
+    snaps=sorted(glob.glob(archive_dir+"/*.snap"), reverse=True)
     for i in range(len(snaps)-1):
         a = snaps[i]
         b = snaps[i+1]
-        all_changes[(a,b)] = snap_changes(a,b)
+        all_changes.append(snap_changes(a,b))
     return all_changes
 
 
 def render_text(changes):
-    for chg in changes.values():
+    for chg in changes:
         print("# Core snap %s to %s" % (chg.old_version, chg.new_version))
         print("\n")
         print("## Package changes\n")
         for deb, ver in sorted(chg.pkg_changes.items()):
             print(" * %s: %s -> %s" % (deb, ver[0], ver[1]))
         print("\n")
-        print("## Changelogs\n")
+        print("## Changelogs\nq")
         for name, changelog in chg.changelogs.items():
             print("%s" % changelog)
             print("\n")
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
