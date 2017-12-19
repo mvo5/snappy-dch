@@ -76,7 +76,7 @@ def revert_previous_edge_versions(li, arches):
         
         
 if __name__ == "__main__":
-    #output = subprocess.check_output(["snapcraft", "list-revisions", PKG], universal_newlines=True)
+    output = subprocess.check_output(["snapcraft", "list-revisions", PKG], universal_newlines=True)
     arches=set()
     li = output.split("\n")
     # skip header
