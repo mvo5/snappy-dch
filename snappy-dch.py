@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 
 import subprocess
@@ -49,7 +49,7 @@ def find_closed_bugs(commit):
         return ""
     start, end = commit.merge().split()
     output = subprocess.check_output(
-        ["git", "log", "{}..{}".format(start, end)])
+        ["git", "log", "{}..{}".format(start, end)], universal_newlines=True)
     bugs = []
     for change in commits(output):
         seen.add(change.commit())
@@ -91,7 +91,7 @@ def filter(body):
 if __name__ == "__main__":
     since = sys.argv[1]
     output = subprocess.check_output(
-        ["git", "log", "{}..".format(since)])
+        ["git", "log", "{}..".format(since)], universal_newlines=True)
 
     changes = ""
     for commit in commits(output):
@@ -107,5 +107,5 @@ if __name__ == "__main__":
     wrapper = textwrap.TextWrapper(initial_indent="    - ", subsequent_indent="      ", width=72)
     for line in changes.split("\n"):
         #print("    - {}".format(line))
-        print("\n".join(wrapper.wrap(line)))
+        print(("\n".join(wrapper.wrap(line))))
         pass
