@@ -107,5 +107,5 @@ if __name__ == "__main__":
     wrapper = textwrap.TextWrapper(initial_indent="    - ", subsequent_indent="      ", width=72)
     for line in changes.split("\n"):
         #print("    - {}".format(line))
-        print(("\n".join(wrapper.wrap(line))))
+        print("\n".join(wrapper.wrap(line)))
         pass
